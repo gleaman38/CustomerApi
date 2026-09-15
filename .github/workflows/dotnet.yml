@@ -28,3 +28,6 @@ jobs:
 
     - name: Run tests
       run: dotnet test CustomerApi.sln --no-build
+
+    - name: Publish
+      run: dotnet publish CustomerApi/CustomerApi.csproj -c Release -o ./publish
