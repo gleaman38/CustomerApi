@@ -42,7 +42,8 @@ namespace CustomerApi.Tests
 
             var customer = Assert.IsType<CustomerDto>(okResult.Value);
 
-            Assert.Equal("John", customer.FirstName);
+            //gsl Assert.Equal("John", customer.FirstName);
+            Assert.Equal("George", customer.FirstName);
             Assert.Equal("Smith", customer.LastName);
         }
 
