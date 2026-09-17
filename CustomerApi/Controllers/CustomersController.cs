@@ -6,11 +6,13 @@ using System.Collections;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection.Metadata;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CustomerApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class CustomersController : ControllerBase
 {
     private readonly CustomerDbContext _context;
