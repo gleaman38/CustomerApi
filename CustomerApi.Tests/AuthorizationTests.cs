@@ -78,6 +78,8 @@ public class AuthorizationTests
 
         var response = await client.GetAsync("/api/Customers");
 
+        var responseBody = await response.Content.ReadAsStringAsync();
+
         var result = await response.Content
             .ReadFromJsonAsync<IEnumerable<CustomerDto>>();
 
