@@ -1,11 +1,17 @@
-﻿using CustomerApi.DTOs;
+﻿using CustomerApi.Controllers;
+using CustomerApi.Data;
+using CustomerApi.DTOs;
+using CustomerApi.Models;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text;
 using Xunit;
+
 
 namespace CustomerApi.Tests;
 
@@ -109,7 +115,38 @@ public class AuthorizationTests
     [Fact]
     public async Task TestAuthenticatedUserCanGetCustomer()
     {
-        await using var factory = new WebApplicationFactory<Program>();
+        await using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var descriptor = services.SingleOrDefault(
+                        d => d.ServiceType == typeof(DbContextOptions<CustomerDbContext>));
+
+                    if (descriptor != null)
+                    {
+                        services.Remove(descriptor);
+                    }
+
+                    services.AddDbContext<CustomerDbContext>(options =>
+                        options.UseInMemoryDatabase("AuthorizationTests"));
+                });
+            });
+
+        using var scope = factory.Services.CreateScope();
+
+        var db = scope.ServiceProvider.GetRequiredService<CustomerDbContext>();
+
+        db.Customers.Add(new Customer
+        {
+            Id = 2,
+            FirstName = "John",
+            LastName = "Smith",
+            Email = "john@example.com",
+            IsActive = true
+        });
+
+        db.SaveChanges();
 
         using var client = factory.CreateClient();
 
@@ -122,11 +159,12 @@ public class AuthorizationTests
 
         var response = await client.GetAsync("/api/Customers/2");
 
-        var content = await response.Content.ReadAsStringAsync();
-
-        Console.WriteLine(content);
+        var result = await response.Content
+            .ReadFromJsonAsync<CustomerDto>();
 
         Assert.Equal(200, (int)response.StatusCode);
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Id);
 
     }
 
