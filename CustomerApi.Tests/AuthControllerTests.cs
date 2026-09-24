@@ -3,6 +3,7 @@ using CustomerApi.Data;
 using CustomerApi.DTOs;
 using CustomerApi.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Xunit;
@@ -164,4 +165,5 @@ public class AuthControllerTests
         Assert.IsType<Microsoft.AspNetCore.Mvc.UnauthorizedResult>(
             result.Result);
     }
+
 }

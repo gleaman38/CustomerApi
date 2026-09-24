@@ -66,7 +66,6 @@ namespace CustomerApi.Tests
 
         }
 
-
         [Fact]
         public async Task CreateCustomer_ReturnsCreatedCustomer()
         {
