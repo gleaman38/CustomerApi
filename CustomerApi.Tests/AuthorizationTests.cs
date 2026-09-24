@@ -65,7 +65,47 @@ public class AuthorizationTests
     [Fact]
     public async Task TestAdminAuthorization()
     {
-        await using var factory = new WebApplicationFactory<Program>();
+        await using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var descriptor = services.SingleOrDefault(
+                        d => d.ServiceType == typeof(DbContextOptions<CustomerDbContext>));
+
+                    if (descriptor != null)
+                    {
+                        services.Remove(descriptor);
+                    }
+
+                    services.AddDbContext<CustomerDbContext>(options =>
+                        options.UseInMemoryDatabase(Guid.NewGuid().ToString()));
+                });
+            });
+
+        using var scope = factory.Services.CreateScope();
+
+        var db = scope.ServiceProvider.GetRequiredService<CustomerDbContext>();
+
+        db.Customers.AddRange(
+            new Customer
+            {
+                Id = 1,
+                FirstName = "Jane",
+                LastName = "Doe",
+                Email = "jane@example.com",
+                IsActive = true
+            },
+            new Customer
+            {
+                Id = 2,
+                FirstName = "John",
+                LastName = "Smith",
+                Email = "john@example.com",
+                IsActive = true
+            });
+
+        db.SaveChanges();
 
         using var client = factory.CreateClient();
 
