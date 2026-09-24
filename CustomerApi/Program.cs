@@ -1,10 +1,12 @@
-
 using CustomerApi.Data;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System;
+using System.Net;
 
 namespace CustomerApi
 {
@@ -15,6 +17,7 @@ namespace CustomerApi
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+
 
             //Dependency Injection to use SQL database
             builder.Services.AddDbContext<CustomerDbContext>(options =>
@@ -72,6 +75,25 @@ namespace CustomerApi
             });
 
             var app = builder.Build();
+
+            // 1. Create a logger instance from the built-in DI container
+            var logger = app.Services.GetRequiredService<ILogger<Program>>();
+
+            //app.UseCors("default");
+
+            app.UseExceptionHandler(errorApp =>
+            {
+                errorApp.Run(async context =>
+                {
+                    var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
+                    var exception = exceptionHandlerPathFeature?.Error;
+
+                    logger.LogError(exception, "Unhandled exception occurred. {ExceptionDetails}", exception?.ToString());
+                    Console.WriteLine(exception?.ToString());
+                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                    await context.Response.WriteAsync("an unexpected error occurred. Please try again later");
+                });
+            });
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

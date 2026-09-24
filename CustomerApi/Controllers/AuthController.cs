@@ -1,5 +1,9 @@
-﻿using CustomerApi.DTOs;
+﻿using CustomerApi.Data;
+using CustomerApi.DTOs;
+using CustomerApi.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -13,17 +17,33 @@ namespace CustomerApi.Controllers
     {
 
         private readonly IConfiguration _configuration;
+        private readonly CustomerDbContext _context;
 
-        public AuthController(IConfiguration configuration)
+        public AuthController(IConfiguration configuration, CustomerDbContext context)
         {
             _configuration = configuration;
+            _context = context;
         }
 
         [HttpPost("login")]
-        public ActionResult<LoginResponseDto> Login(LoginRequestDto loginRequest)
+        public async Task<ActionResult<LoginResponseDto>> Login(LoginRequestDto loginRequest)
         {
-            if (loginRequest.Username != "john" ||
-                loginRequest.Password != "password123")
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == loginRequest.Username);
+
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            var hasher = new PasswordHasher<User>();
+
+            var passwordResult = hasher.VerifyHashedPassword(
+                user,
+                user.PasswordHash,
+                loginRequest.Password);
+
+            if (passwordResult == PasswordVerificationResult.Failed)
             {
                 return Unauthorized();
             }
@@ -60,5 +80,6 @@ namespace CustomerApi.Controllers
 
             return Ok(response);
         }
+
     }
 }

@@ -22,6 +22,7 @@ public class CustomersController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<IEnumerable<CustomerDto>>> GetCustomers()
     {
         var customers = await _context.Customers
