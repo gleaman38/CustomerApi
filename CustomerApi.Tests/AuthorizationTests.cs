@@ -308,6 +308,174 @@ public class AuthorizationTests
     }
 
     [Fact]
+    public async Task TestCreateCustomerReturnsBadRequestWhenFirstNameIsMissing()
+    {
+        //find and save name of unique database
+        var databaseName = Guid.NewGuid().ToString();
+
+        //build test copy of the api
+        //and change the database to use in Program.cs in memory database
+        await using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var descriptor = services.SingleOrDefault(
+                        d => d.ServiceType == typeof(DbContextOptions<CustomerDbContext>));
+
+                    if (descriptor != null)
+                    {
+                        services.Remove(descriptor);
+                    }
+
+                    services.AddDbContext<CustomerDbContext>(options =>
+                        options.UseInMemoryDatabase(databaseName));
+                });
+            });
+
+        //create an Http client to talk to the test api
+        using var client = factory.CreateClient();
+
+        //build user token to talk to endpoint
+        var token = CreateUserTestToken();
+
+        client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue(
+                "Bearer",
+                token);
+
+        //new data to add to in memory db
+        //with first name missing
+        var newCustomer = new CreateCustomerDto
+        {
+            LastName = "Customer",
+            Email = "test.customer@example.com",
+            IsActive = true
+        };
+
+        //call the Post method in the controller
+        var response = await client.PostAsJsonAsync(
+            "/api/Customers", newCustomer);
+
+        //was the Post record created
+        Assert.Equal(400, (int)response.StatusCode);
+
+    }
+
+    [Fact]
+    public async Task TestCreateCustomerReturnsBadRequestWhenLastNameIsMissing()
+    {
+        //find and save name of unique database
+        var databaseName = Guid.NewGuid().ToString();
+
+        //build test copy of the api
+        //and change the database to use in Program.cs in memory database
+        await using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var descriptor = services.SingleOrDefault(
+                        d => d.ServiceType == typeof(DbContextOptions<CustomerDbContext>));
+
+                    if (descriptor != null)
+                    {
+                        services.Remove(descriptor);
+                    }
+
+                    services.AddDbContext<CustomerDbContext>(options =>
+                        options.UseInMemoryDatabase(databaseName));
+                });
+            });
+
+        //create an Http client to talk to the test api
+        using var client = factory.CreateClient();
+
+        //build user token to talk to endpoint
+        var token = CreateUserTestToken();
+
+        client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue(
+                "Bearer",
+                token);
+
+        //new data to add to in memory db
+        //with last name missing
+        var newCustomer = new CreateCustomerDto
+        {
+            FirstName = "Test",
+            Email = "test.customer@example.com",
+            IsActive = true
+        };
+
+        //call the Post method in the controller
+        var response = await client.PostAsJsonAsync(
+            "/api/Customers", newCustomer);
+
+        //was the Post record created
+        Assert.Equal(400, (int)response.StatusCode);
+
+    }
+
+
+    [Fact]
+    public async Task TestCreateCustomerReturnsBadRequestWhenEmailIsInvalid()
+    {
+        //find and save name of unique database
+        var databaseName = Guid.NewGuid().ToString();
+
+        //build test copy of the api
+        //and change the database to use in Program.cs in memory database
+        await using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var descriptor = services.SingleOrDefault(
+                        d => d.ServiceType == typeof(DbContextOptions<CustomerDbContext>));
+
+                    if (descriptor != null)
+                    {
+                        services.Remove(descriptor);
+                    }
+
+                    services.AddDbContext<CustomerDbContext>(options =>
+                        options.UseInMemoryDatabase(databaseName));
+                });
+            });
+
+        //create an Http client to talk to the test api
+        using var client = factory.CreateClient();
+
+        //build user token to talk to endpoint
+        var token = CreateUserTestToken();
+
+        client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue(
+                "Bearer",
+                token);
+
+        //new data to add to in memory db
+        //with invalid email
+        var newCustomer = new CreateCustomerDto
+        {
+            FirstName = "Test",
+            LastName = "Customer",
+            Email = "test.customer.example.com",
+            IsActive = true
+        };
+
+        //call the Post method in the controller
+        var response = await client.PostAsJsonAsync(
+            "/api/Customers", newCustomer);
+
+        //was the Post record created
+        Assert.Equal(400, (int)response.StatusCode);
+
+    }
+
+
+    [Fact]
     public async Task TestUnauthenticatedUserCannotCreateCustomer()
     {
         //find and save name of unique database
@@ -412,7 +580,8 @@ public class AuthorizationTests
                 "Bearer",
                 token);
 
-        var newCustomerData = new Customer {
+        var updatedCustomer = new UpdateCustomerDto
+        {
             FirstName = "AnotherTest",
             LastName = "AnotherCustomer",
             Email = "anothertest.anothercustomer@example.com",
@@ -421,7 +590,7 @@ public class AuthorizationTests
 
         //call the Put method in the controller
         var response = await client.PutAsJsonAsync(
-            $"/api/Customers/{customer.Id}", newCustomerData);
+            $"/api/Customers/{customer.Id}", updatedCustomer);
 
         Assert.Equal(200, (int)response.StatusCode);
 
@@ -487,7 +656,7 @@ public class AuthorizationTests
 
         //now in memory db has a record to edit
 
-        var newCustomerData = new Customer
+        var updatedCustomer = new UpdateCustomerDto
         {
             FirstName = "AnotherTest",
             LastName = "AnotherCustomer",
@@ -497,9 +666,214 @@ public class AuthorizationTests
 
         //call the Put method in the controller
         var response = await client.PutAsJsonAsync(
-            $"/api/Customers/{customer.Id}", newCustomerData);
+            $"/api/Customers/{customer.Id}", updatedCustomer);
 
         Assert.Equal(401, (int)response.StatusCode);
+
+    }
+
+    [Fact]
+    public async Task TestAuthenticatedUserCannotUpdateNonexistentCustomer()
+    {
+        //find and save name of unique database
+        var databaseName = Guid.NewGuid().ToString();
+
+        //build test copy of the api
+        //and change the database to use in Program.cs in memory database
+        await using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var descriptor = services.SingleOrDefault(
+                        d => d.ServiceType == typeof(DbContextOptions<CustomerDbContext>));
+
+                    if (descriptor != null)
+                    {
+                        services.Remove(descriptor);
+                    }
+
+                    services.AddDbContext<CustomerDbContext>(options =>
+                        options.UseInMemoryDatabase(databaseName));
+                });
+            });
+
+        //create an Http client to talk to the test api
+        using var client = factory.CreateClient();
+
+        //now in memory db is empty
+
+        //build user token to talk to endpoint
+        var token = CreateUserTestToken();
+
+        client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue(
+                "Bearer",
+                token);
+
+        var updatedCustomer = new Customer
+        {
+            FirstName = "Test",
+            LastName = "Customer",
+            Email = "test2.customer2@example.com",
+            IsActive = true
+        };
+
+        var customerId = 999;
+
+        //call the Put method in the controller
+        var response = await client.PutAsJsonAsync(
+            $"/api/Customers/{customerId}", updatedCustomer);
+
+        Assert.Equal(404, (int)response.StatusCode);
+
+    }
+
+    [Fact]
+    public async Task TestAuthenticatedUserReturnsBadRequestForUpdateWhenFirstNameIsMissing()
+    {
+        //find and save name of unique database
+        var databaseName = Guid.NewGuid().ToString();
+
+        //build test copy of the api
+        //and change the database to use in Program.cs in memory database
+        await using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var descriptor = services.SingleOrDefault(
+                        d => d.ServiceType == typeof(DbContextOptions<CustomerDbContext>));
+
+                    if (descriptor != null)
+                    {
+                        services.Remove(descriptor);
+                    }
+
+                    services.AddDbContext<CustomerDbContext>(options =>
+                        options.UseInMemoryDatabase(databaseName));
+                });
+            });
+
+        //create an Http client to talk to the test api
+        using var client = factory.CreateClient();
+
+        //new data to add to in memory db
+        var customer = new Customer
+        {
+            FirstName = "Test",
+            LastName = "Customer",
+            Email = "test.customer@example.com",
+            IsActive = true
+        };
+
+        //add the customer to edit later into in memory database
+        using var scope = factory.Services.CreateScope();
+
+        //now db is the variable for dbContext from in memory database above
+        var db = scope.ServiceProvider.GetRequiredService<CustomerDbContext>();
+
+        //add customer to edit in the Put
+        db.Customers.Add(customer);
+        await db.SaveChangesAsync();
+
+        //now in memory db has a record to edit
+
+        //build user token to talk to endpoint
+        var token = CreateUserTestToken();
+
+        client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue(
+                "Bearer",
+                token);
+
+        var updatedCustomer = new UpdateCustomerDto
+        {
+            FirstName = null,
+            LastName = "AnotherCustomer",
+            Email = "another.customer@example.com",
+            IsActive = true
+        };
+
+        //call the Put method in the controller
+        var response = await client.PutAsJsonAsync(
+            $"/api/Customers/{customer.Id}", updatedCustomer);
+
+        Assert.Equal(400, (int)response.StatusCode);
+
+    }
+
+    [Fact]
+    public async Task TestAuthenticatedUserReturnsBadRequestForUpdateWhenEmailIsInvalid()
+    {
+        //find and save name of unique database
+        var databaseName = Guid.NewGuid().ToString();
+
+        //build test copy of the api
+        //and change the database to use in Program.cs in memory database
+        await using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var descriptor = services.SingleOrDefault(
+                        d => d.ServiceType == typeof(DbContextOptions<CustomerDbContext>));
+
+                    if (descriptor != null)
+                    {
+                        services.Remove(descriptor);
+                    }
+
+                    services.AddDbContext<CustomerDbContext>(options =>
+                        options.UseInMemoryDatabase(databaseName));
+                });
+            });
+
+        //create an Http client to talk to the test api
+        using var client = factory.CreateClient();
+
+        //new data to add to in memory db
+        var customer = new Customer
+        {
+            FirstName = "Test",
+            LastName = "Customer",
+            Email = "test.customer@example.com",
+            IsActive = true
+        };
+
+        //add the customer to edit later into in memory database
+        using var scope = factory.Services.CreateScope();
+
+        //now db is the variable for dbContext from in memory database above
+        var db = scope.ServiceProvider.GetRequiredService<CustomerDbContext>();
+
+        //add customer to edit in the Put
+        db.Customers.Add(customer);
+        await db.SaveChangesAsync();
+
+        //now in memory db has a record to edit
+
+        //build user token to talk to endpoint
+        var token = CreateUserTestToken();
+
+        client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue(
+                "Bearer",
+                token);
+
+        var updatedCustomer = new UpdateCustomerDto
+        {
+            FirstName = "AnotherTest",
+            LastName = "AnotherCustomer",
+            Email = "another.test.another.customer.example.com",
+            IsActive = true
+        };
+
+        //call the Put method in the controller
+        var response = await client.PutAsJsonAsync(
+            $"/api/Customers/{customer.Id}", updatedCustomer);
+
+        Assert.Equal(400, (int)response.StatusCode);
 
     }
 
@@ -637,6 +1011,55 @@ public class AuthorizationTests
         var response = await client.DeleteAsync($"/api/Customers/{customer.Id}");
 
         Assert.Equal(401, (int)response.StatusCode);
+
+    }
+
+    [Fact]
+    public async Task TestAuthenticatedUserCannotDeleteNonexistentCustomer()
+    {
+        //find and save name of unique database
+        var databaseName = Guid.NewGuid().ToString();
+
+        //build test copy of the api
+        //and change the database to use in Program.cs in memory database
+        await using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var descriptor = services.SingleOrDefault(
+                        d => d.ServiceType == typeof(DbContextOptions<CustomerDbContext>));
+
+                    if (descriptor != null)
+                    {
+                        services.Remove(descriptor);
+                    }
+
+                    services.AddDbContext<CustomerDbContext>(options =>
+                        options.UseInMemoryDatabase(databaseName));
+                });
+            });
+
+        //create an Http client to talk to the test api
+        using var client = factory.CreateClient();
+
+        //now in memory db is empty
+
+        //build user token to talk to endpoint
+        var token = CreateUserTestToken();
+
+        client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue(
+                "Bearer",
+                token);
+
+        var customerId = 999;
+
+        //call the Delete method in the controller
+        var response = await client.DeleteAsync(
+            $"/api/Customers/{customerId}");
+
+        Assert.Equal(404, (int)response.StatusCode);
 
     }
 
