@@ -158,6 +158,127 @@ public class AuthorizationTests
     }
 
     [Fact]
+    public async Task TestAdminAuthenticatedUserCanGetCustomerList()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+
+        await using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var descriptor = services.SingleOrDefault(
+                        d => d.ServiceType == typeof(DbContextOptions<CustomerDbContext>));
+
+                    if (descriptor != null)
+                    {
+                        services.Remove(descriptor);
+                    }
+
+                    services.AddDbContext<CustomerDbContext>(options =>
+                        options.UseInMemoryDatabase(databaseName));
+                });
+            });
+
+        using var scope = factory.Services.CreateScope();
+
+        var db = scope.ServiceProvider.GetRequiredService<CustomerDbContext>();
+
+        db.Customers.AddRange(
+            new Customer
+            {
+                Id = 1,
+                FirstName = "Jane",
+                LastName = "Doe",
+                Email = "jane@example.com",
+                IsActive = true
+            },
+            new Customer
+            {
+                Id = 2,
+                FirstName = "John",
+                LastName = "Smith",
+                Email = "john@example.com",
+                IsActive = true
+            });
+
+        await db.SaveChangesAsync();
+
+        using var client = factory.CreateClient();
+
+        var token = CreateAdminTestToken();
+
+        client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue(
+                "Bearer",
+                token);
+
+        var response = await client.GetAsync("/api/Customers");
+
+        var result = await response.Content
+            .ReadFromJsonAsync<IEnumerable<CustomerDto>>();
+
+        Assert.Equal(200, (int)response.StatusCode);
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count());
+    }
+
+    [Fact]
+    public async Task TestAdminAuthenticatedUserCanGetEmptyCustomerList()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+
+        await using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var descriptor = services.SingleOrDefault(
+                        d => d.ServiceType == typeof(DbContextOptions<CustomerDbContext>));
+
+                    if (descriptor != null)
+                    {
+                        services.Remove(descriptor);
+                    }
+
+                    services.AddDbContext<CustomerDbContext>(options =>
+                        options.UseInMemoryDatabase(databaseName));
+                });
+            });
+
+        using var client = factory.CreateClient();
+
+        var token = CreateAdminTestToken();
+
+        client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue(
+                "Bearer",
+                token);
+
+        var response = await client.GetAsync("/api/Customers");
+
+        var result = await response.Content
+            .ReadFromJsonAsync<IEnumerable<CustomerDto>>();
+
+        Assert.Equal(200, (int)response.StatusCode);
+        Assert.NotNull(result);
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task TestUnauthenticatedUserCannotGetCustomerList()
+    {
+
+        await using var factory = new WebApplicationFactory<Program>();
+
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/api/Customers");
+
+        Assert.Equal(401, (int)response.StatusCode);
+    }
+
+    [Fact]
     public async Task TestAuthenticatedUserCanGetCustomer()
     {
         await using var factory = new WebApplicationFactory<Program>()
