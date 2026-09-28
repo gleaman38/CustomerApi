@@ -2,6 +2,7 @@
 using CustomerApi.Models;
 using CustomerApi.DTOs;
 using CustomerApi.Data;
+using CustomerApi.Repositories;
 using System.Collections;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
@@ -15,25 +16,26 @@ namespace CustomerApi.Controllers;
 [Authorize]
 public class CustomersController : ControllerBase
 {
-    private readonly CustomerDbContext _context;
-    public CustomersController(CustomerDbContext context)
+    private readonly ICustomerRepository _repository;
+    public CustomersController(ICustomerRepository repository)
     {
-        _context = context;
+        _repository = repository;
     }
 
     [HttpGet]
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<IEnumerable<CustomerDto>>> GetCustomers()
     {
-        var customers = await _context.Customers
-            .Select(c=>new CustomerDto
+        var customers = await _repository.GetAllAsync();
+
+        var customerDtos = customers.Select(c=>new CustomerDto
             {
                 Id = c.Id,
                 FirstName = c.FirstName,
                 LastName = c.LastName,
                 Email = c.Email,
                 IsActive = c.IsActive
-            }).ToListAsync();
+            });
 
         return Ok(customers);
     }
@@ -47,7 +49,7 @@ public class CustomersController : ControllerBase
             return NotFound("Invalid customer id");
         }
 
-        var customer = await _context.Customers.FindAsync(id);
+        var customer = await _repository.GetByIdAsync(id);
 
         if (customer == null)
         {
@@ -78,9 +80,7 @@ public class CustomersController : ControllerBase
             IsActive = customerDto.IsActive
         };
 
-        _context.Customers.Add(customer);
-
-        await _context.SaveChangesAsync();
+        var createdCustomer = await _repository.AddAsync(customer);
 
         var result = new CustomerDto
         {
@@ -106,27 +106,29 @@ public class CustomersController : ControllerBase
             return BadRequest("Invalid customer id");
         }
 
-        var foundRecord = await _context.Customers.FindAsync(id);
+        var customer = new Customer
+        {
+            Id = id,
+            FirstName = customerDto.FirstName,
+            LastName = customerDto.LastName,
+            Email = customerDto.Email,
+            IsActive = customerDto.IsActive
+        };
 
-        if (foundRecord == null)
+        var updatedCustomer = await _repository.UpdateAsync(customer);
+
+        if (updatedCustomer == null)
         {
             return NotFound();
         }
 
-        foundRecord.FirstName = customerDto.FirstName;
-        foundRecord.LastName = customerDto.LastName;
-        foundRecord.Email = customerDto.Email;
-        foundRecord.IsActive = customerDto.IsActive;
-
-        await _context.SaveChangesAsync();
-
         var result = new CustomerDto
         {
-            Id = foundRecord.Id,
-            FirstName = foundRecord.FirstName,
-            LastName = foundRecord.LastName,
-            Email = foundRecord.Email,
-            IsActive = foundRecord.IsActive
+            Id = updatedCustomer.Id,
+            FirstName = updatedCustomer.FirstName,
+            LastName = updatedCustomer.LastName,
+            Email = updatedCustomer.Email,
+            IsActive = updatedCustomer.IsActive
         };
 
         return Ok(result);
@@ -141,23 +143,20 @@ public class CustomersController : ControllerBase
             return BadRequest("Invalid customer id");
         }
 
-        var customer = await _context.Customers.FindAsync(id);
+        var deletedCustomer = await _repository.DeleteAsync(id);
 
-        if (customer == null)
+        if (deletedCustomer == null)
         {
             return NotFound();
         }
 
-        _context.Customers.Remove(customer);
-        await _context.SaveChangesAsync();
-
         var result = new CustomerDto
         {
-            Id = customer.Id,
-            FirstName = customer.FirstName,
-            LastName = customer.LastName,
-            Email = customer.Email,
-            IsActive = customer.IsActive
+            Id = deletedCustomer.Id,
+            FirstName = deletedCustomer.FirstName,
+            LastName = deletedCustomer.LastName,
+            Email = deletedCustomer.Email,
+            IsActive = deletedCustomer.IsActive
         };
 
         return Ok(result);

@@ -2,6 +2,7 @@ using CustomerApi.Controllers;
 using CustomerApi.Data;
 using CustomerApi.DTOs;
 using CustomerApi.Models;
+using CustomerApi.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -32,7 +33,9 @@ namespace CustomerApi.Tests
 
             await context.SaveChangesAsync();
 
-            var controller = new CustomersController(context);
+            var repository = new CustomerRepository(context);
+
+            var controller = new CustomersController(repository);
 
             //Act
             var result = await controller.GetCustomer(1);
@@ -56,7 +59,9 @@ namespace CustomerApi.Tests
 
             using var context = new CustomerDbContext(options);
 
-            var controller = new CustomersController(context);
+            var repository = new CustomerRepository(context);
+
+            var controller = new CustomersController(repository);
 
             //Act
             var result = await controller.GetCustomer(999);
@@ -76,7 +81,9 @@ namespace CustomerApi.Tests
 
             using var context = new CustomerDbContext(options);
 
-            var controller = new CustomersController(context);
+            var repository = new CustomerRepository(context);
+
+            var controller = new CustomersController(repository);
 
             //Act
             var newCustomer = new CreateCustomerDto
@@ -122,7 +129,9 @@ namespace CustomerApi.Tests
 
             await context.SaveChangesAsync();
 
-            var controller = new CustomersController(context);
+            var repository = new CustomerRepository(context);
+
+            var controller = new CustomersController(repository);
 
             //"database" holds a customer with id 1
 
@@ -161,7 +170,9 @@ namespace CustomerApi.Tests
 
             using var context = new CustomerDbContext(options);
 
-            var controller = new CustomersController(context);
+            var repository = new CustomerRepository(context);
+
+            var controller = new CustomersController(repository);
 
             //"database" holds no customers
 
@@ -202,7 +213,9 @@ namespace CustomerApi.Tests
 
             await context.SaveChangesAsync();
 
-            var controller = new CustomersController(context);
+            var repository = new CustomerRepository(context);
+
+            var controller = new CustomersController(repository);
 
             // Act
             var result = await controller.DeleteCustomer(1);
@@ -231,7 +244,9 @@ namespace CustomerApi.Tests
 
             using var context = new CustomerDbContext(options);
 
-            var controller = new CustomersController(context);
+            var repository = new CustomerRepository(context);
+
+            var controller = new CustomersController(repository);
 
             // Act
             var result = await controller.DeleteCustomer(1);

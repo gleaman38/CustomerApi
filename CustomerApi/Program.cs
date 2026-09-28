@@ -1,4 +1,5 @@
 using CustomerApi.Data;
+using CustomerApi.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +26,8 @@ namespace CustomerApi
                 options.UseSqlServer(
                     builder.Configuration.GetConnectionString("CustomerDb")
             ));
+
+            builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
