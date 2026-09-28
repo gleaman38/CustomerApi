@@ -173,10 +173,7 @@ namespace CustomerApi.Tests
                 IsActive = false
             };
 
-            await context.SaveChangesAsync();
-
             //Act
-
             var result = await controller.EditCustomer(1, updatedCustomer);
 
             //Assert

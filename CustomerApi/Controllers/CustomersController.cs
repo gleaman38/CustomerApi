@@ -97,8 +97,6 @@ public class CustomersController : ControllerBase
             result);
     }
 
-    
-
     [HttpPut("{id}")]
     public async Task<ActionResult<CustomerDto>> EditCustomer(int id, UpdateCustomerDto customerDto)
     {
