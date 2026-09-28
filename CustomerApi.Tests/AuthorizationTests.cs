@@ -213,6 +213,41 @@ public class AuthorizationTests
 
     }
 
+    [Fact]
+    public async Task TestAuthenticatedUserReturnsNotFoundOnGetWhenIdIsInvalid()
+    {
+        await using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var descriptor = services.SingleOrDefault(
+                        d => d.ServiceType == typeof(DbContextOptions<CustomerDbContext>));
+
+                    if (descriptor != null)
+                    {
+                        services.Remove(descriptor);
+                    }
+
+                    services.AddDbContext<CustomerDbContext>(options =>
+                        options.UseInMemoryDatabase("AuthorizationTests"));
+                });
+            });
+
+        using var client = factory.CreateClient();
+
+        var token = CreateUserTestToken();
+
+        client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue(
+                "Bearer",
+                token);
+
+        var response = await client.GetAsync("/api/Customers/0");
+
+        Assert.Equal(404, (int)response.StatusCode);
+
+    }
 
     [Fact]
     public async Task TestNotAuthenticatedUserCannotGetCustomer()
@@ -222,6 +257,22 @@ public class AuthorizationTests
         using var client = factory.CreateClient();
 
         var response = await client.GetAsync("/api/Customers/2");
+
+        Assert.Equal(401, (int)response.StatusCode);
+
+    }
+
+    [Fact]
+    public async Task TestNonAuthenticatedUserReturnsUnauthorizedOnGetWhenIdIsInvalid()
+    {
+        await using var factory = new WebApplicationFactory<Program>();
+
+        //no database is necessary since Unauthorized error from no token comes before
+        //controller is called
+ 
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/api/Customers/0");
 
         Assert.Equal(401, (int)response.StatusCode);
 
@@ -306,6 +357,8 @@ public class AuthorizationTests
         Assert.True(result.IsActive);
 
     }
+
+
 
     [Fact]
     public async Task TestCreateCustomerReturnsBadRequestWhenFirstNameIsMissing()
@@ -1060,6 +1113,55 @@ public class AuthorizationTests
             $"/api/Customers/{customerId}");
 
         Assert.Equal(404, (int)response.StatusCode);
+
+    }
+
+    [Fact]
+    public async Task TestAuthenticatedUserCannotDeleteCustomerWithInvalidId()
+    {
+        //find and save name of unique database
+        var databaseName = Guid.NewGuid().ToString();
+
+        //build test copy of the api
+        //and change the database to use in Program.cs in memory database
+        await using var factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var descriptor = services.SingleOrDefault(
+                        d => d.ServiceType == typeof(DbContextOptions<CustomerDbContext>));
+
+                    if (descriptor != null)
+                    {
+                        services.Remove(descriptor);
+                    }
+
+                    services.AddDbContext<CustomerDbContext>(options =>
+                        options.UseInMemoryDatabase(databaseName));
+                });
+            });
+
+        //create an Http client to talk to the test api
+        using var client = factory.CreateClient();
+
+        //now in memory db is empty
+
+        //build user token to talk to endpoint
+        var token = CreateUserTestToken();
+
+        client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue(
+                "Bearer",
+                token);
+
+        var customerId = 0;
+
+        //call the Delete method in the controller
+        var response = await client.DeleteAsync(
+            $"/api/Customers/{customerId}");
+
+        Assert.Equal(400, (int)response.StatusCode);
 
     }
 

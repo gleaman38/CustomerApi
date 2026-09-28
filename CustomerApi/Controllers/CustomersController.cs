@@ -42,6 +42,11 @@ public class CustomersController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<CustomerDto>> GetCustomer(int id)
     {
+        if (id <= 0)
+        {
+            return NotFound("Invalid customer id");
+        }
+
         var customer = await _context.Customers.FindAsync(id);
 
         if (customer == null)
@@ -132,6 +137,12 @@ public class CustomersController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<ActionResult<CustomerDto>> DeleteCustomer(int id)
     {
+
+        if (id <= 0)
+        {
+            return BadRequest("Invalid customer id");
+        }
+
         var customer = await _context.Customers.FindAsync(id);
 
         if (customer == null)
