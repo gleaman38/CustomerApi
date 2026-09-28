@@ -1,8 +1,6 @@
-﻿using CustomerApi.Controllers;
-using CustomerApi.Data;
+﻿using CustomerApi.Data;
 using CustomerApi.DTOs;
 using CustomerApi.Models;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -587,23 +585,7 @@ public class AuthorizationTests
 
         //build test copy of the api
         //and change the database to use in Program.cs in memory database
-        await using var factory = new WebApplicationFactory<Program>()
-            .WithWebHostBuilder(builder =>
-            {
-                builder.ConfigureServices(services =>
-                {
-                    var descriptor = services.SingleOrDefault(
-                        d => d.ServiceType == typeof(DbContextOptions<CustomerDbContext>));
-
-                    if (descriptor != null)
-                    {
-                        services.Remove(descriptor);
-                    }
-
-                    services.AddDbContext<CustomerDbContext>(options =>
-                        options.UseInMemoryDatabase(databaseName));
-                });
-            });
+        await using var factory = new WebApplicationFactory<Program>();
 
         //create an Http client to talk to the test api
         using var client = factory.CreateClient();
