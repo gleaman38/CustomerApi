@@ -1,13 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using CustomerApi.Models;
+﻿using CustomerApi.Data;
 using CustomerApi.DTOs;
-using CustomerApi.Data;
+using CustomerApi.Models;
+using CustomerApi.Services;
 using CustomerApi.Repositories;
-using System.Collections;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.EntityFrameworkCore;
-using System.Reflection.Metadata;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Collections;
+using System.Reflection.Metadata;
 
 namespace CustomerApi.Controllers;
 
@@ -16,26 +17,17 @@ namespace CustomerApi.Controllers;
 [Authorize]
 public class CustomersController : ControllerBase
 {
-    private readonly ICustomerRepository _repository;
-    public CustomersController(ICustomerRepository repository)
+    private readonly ICustomerService _service;
+    public CustomersController(ICustomerService service)
     {
-        _repository = repository;
+        _service = service;
     }
 
     [HttpGet]
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult<IEnumerable<CustomerDto>>> GetCustomers()
     {
-        var customers = await _repository.GetAllAsync();
-
-        var customerDtos = customers.Select(c=>new CustomerDto
-            {
-                Id = c.Id,
-                FirstName = c.FirstName,
-                LastName = c.LastName,
-                Email = c.Email,
-                IsActive = c.IsActive
-            });
+        var customers = await _service.GetAllAsync();
 
         return Ok(customers);
     }
@@ -49,21 +41,12 @@ public class CustomersController : ControllerBase
             return NotFound("Invalid customer id");
         }
 
-        var customer = await _repository.GetByIdAsync(id);
+        var customerDto = await _service.GetByIdAsync(id);
 
-        if (customer == null)
+        if (customerDto == null)
         {
             return NotFound();
         }
-
-        var customerDto = new CustomerDto
-        {
-            Id = customer.Id,
-            FirstName = customer.FirstName,
-            LastName = customer.LastName,
-            Email = customer.Email,
-            IsActive = customer.IsActive
-        };
 
         return Ok(customerDto);
     }
@@ -72,29 +55,12 @@ public class CustomersController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<CustomerDto>> CreateCustomer(CreateCustomerDto customerDto)
     {
-        var customer = new Customer
-        {
-            FirstName = customerDto.FirstName,
-            LastName = customerDto.LastName,
-            Email = customerDto.Email,
-            IsActive = customerDto.IsActive
-        };
-
-        var createdCustomer = await _repository.AddAsync(customer);
-
-        var result = new CustomerDto
-        {
-            Id = customer.Id,
-            FirstName = customer.FirstName,
-            LastName = customer.LastName,
-            Email = customer.Email,
-            IsActive = customer.IsActive
-        };
+        var createdCustomerDto = await _service.AddAsync(customerDto);
 
         return CreatedAtAction(
             nameof(GetCustomer),
-            new { id = customer.Id },
-            result);
+            new { id = createdCustomerDto.Id },
+            createdCustomerDto);
     }
 
     [HttpPut("{id}")]
@@ -106,32 +72,14 @@ public class CustomersController : ControllerBase
             return BadRequest("Invalid customer id");
         }
 
-        var customer = new Customer
-        {
-            Id = id,
-            FirstName = customerDto.FirstName,
-            LastName = customerDto.LastName,
-            Email = customerDto.Email,
-            IsActive = customerDto.IsActive
-        };
+        var updatedCustomerDto = await _service.UpdateAsync(id, customerDto);
 
-        var updatedCustomer = await _repository.UpdateAsync(customer);
-
-        if (updatedCustomer == null)
+        if (updatedCustomerDto == null)
         {
             return NotFound();
         }
 
-        var result = new CustomerDto
-        {
-            Id = updatedCustomer.Id,
-            FirstName = updatedCustomer.FirstName,
-            LastName = updatedCustomer.LastName,
-            Email = updatedCustomer.Email,
-            IsActive = updatedCustomer.IsActive
-        };
-
-        return Ok(result);
+        return Ok(updatedCustomerDto);
     }
 
     [HttpDelete("{id}")]
@@ -143,23 +91,14 @@ public class CustomersController : ControllerBase
             return BadRequest("Invalid customer id");
         }
 
-        var deletedCustomer = await _repository.DeleteAsync(id);
+        var deletedCustomerDto = await _service.DeleteAsync(id);
 
-        if (deletedCustomer == null)
+        if (deletedCustomerDto == null)
         {
             return NotFound();
         }
 
-        var result = new CustomerDto
-        {
-            Id = deletedCustomer.Id,
-            FirstName = deletedCustomer.FirstName,
-            LastName = deletedCustomer.LastName,
-            Email = deletedCustomer.Email,
-            IsActive = deletedCustomer.IsActive
-        };
-
-        return Ok(result);
+        return Ok(deletedCustomerDto);
 
     }
     

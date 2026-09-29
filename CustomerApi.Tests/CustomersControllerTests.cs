@@ -3,6 +3,7 @@ using CustomerApi.Data;
 using CustomerApi.DTOs;
 using CustomerApi.Models;
 using CustomerApi.Repositories;
+using CustomerApi.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -35,7 +36,9 @@ namespace CustomerApi.Tests
 
             var repository = new CustomerRepository(context);
 
-            var controller = new CustomersController(repository);
+            var service = new CustomerService(repository);
+
+            var controller = new CustomersController(service);
 
             //Act
             var result = await controller.GetCustomer(1);
@@ -61,7 +64,9 @@ namespace CustomerApi.Tests
 
             var repository = new CustomerRepository(context);
 
-            var controller = new CustomersController(repository);
+            var service = new CustomerService(repository);
+
+            var controller = new CustomersController(service);
 
             //Act
             var result = await controller.GetCustomer(999);
@@ -83,7 +88,9 @@ namespace CustomerApi.Tests
 
             var repository = new CustomerRepository(context);
 
-            var controller = new CustomersController(repository);
+            var service = new CustomerService(repository);
+
+            var controller = new CustomersController(service);
 
             //Act
             var newCustomer = new CreateCustomerDto
@@ -131,7 +138,9 @@ namespace CustomerApi.Tests
 
             var repository = new CustomerRepository(context);
 
-            var controller = new CustomersController(repository);
+            var service = new CustomerService(repository);
+
+            var controller = new CustomersController(service);
 
             //"database" holds a customer with id 1
 
@@ -172,7 +181,9 @@ namespace CustomerApi.Tests
 
             var repository = new CustomerRepository(context);
 
-            var controller = new CustomersController(repository);
+            var service = new CustomerService(repository);
+
+            var controller = new CustomersController(service);
 
             //"database" holds no customers
 
@@ -215,7 +226,9 @@ namespace CustomerApi.Tests
 
             var repository = new CustomerRepository(context);
 
-            var controller = new CustomersController(repository);
+            var service = new CustomerService(repository);
+
+            var controller = new CustomersController(service);
 
             // Act
             var result = await controller.DeleteCustomer(1);
@@ -246,7 +259,9 @@ namespace CustomerApi.Tests
 
             var repository = new CustomerRepository(context);
 
-            var controller = new CustomersController(repository);
+            var service = new CustomerService(repository);
+
+            var controller = new CustomersController(service);
 
             // Act
             var result = await controller.DeleteCustomer(1);
