@@ -28,7 +28,7 @@ jobs:
 
     - name: Run tests
       env:
-        Jwt__Key: "ThisIsATestOnlySecretKey123456789"
+        Jwt__Key: "ThisIsADevelopmentOnlySecretKey123456789"
       run: dotnet test CustomerApi.sln --no-build
 
     - name: Publish
