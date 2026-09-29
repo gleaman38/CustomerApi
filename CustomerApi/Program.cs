@@ -1,4 +1,5 @@
 using CustomerApi.Data;
+using CustomerApi.Middleware;
 using CustomerApi.Repositories;
 using CustomerApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -84,24 +85,7 @@ namespace CustomerApi
 
             var app = builder.Build();
 
-            // 1. Create a logger instance from the built-in DI container
-            var logger = app.Services.GetRequiredService<ILogger<Program>>();
-
-            //app.UseCors("default");
-
-            app.UseExceptionHandler(errorApp =>
-            {
-                errorApp.Run(async context =>
-                {
-                    var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
-                    var exception = exceptionHandlerPathFeature?.Error;
-
-                    logger.LogError(exception, "Unhandled exception occurred. {ExceptionDetails}", exception?.ToString());
-                    Console.WriteLine(exception?.ToString());
-                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                    await context.Response.WriteAsync("an unexpected error occurred. Please try again later");
-                });
-            });
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
