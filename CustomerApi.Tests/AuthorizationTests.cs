@@ -87,10 +87,6 @@ public class AuthorizationTests
             new Claim(ClaimTypes.Role, "Admin")
         };
 
-        //var key = new SymmetricSecurityKey(
-        //    Encoding.UTF8.GetBytes(
-        //        "ThisIsADevelopmentOnlySecretKey123456789"));
-
         var jwtKey = _configuration["Jwt:Key"];
 
         if (string.IsNullOrEmpty(jwtKey))
@@ -116,7 +112,7 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public async Task TestAdminAuthenticatedUserCanGetCustomerList()
+    public async Task TestAdminAuthenticatedUser_CanGetCustomerList()
     {
         var databaseName = Guid.NewGuid().ToString();
 
@@ -182,7 +178,7 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public async Task TestAdminAuthenticatedUserCanGetEmptyCustomerList()
+    public async Task TestAdminAuthenticatedUser_CanGetEmptyCustomerList()
     {
         var databaseName = Guid.NewGuid().ToString();
 
@@ -224,7 +220,7 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public async Task TestUnauthenticatedUserCannotGetCustomerList()
+    public async Task TestUnauthenticatedUser_CannotGetCustomerList()
     {
 
         await using var factory = new WebApplicationFactory<Program>();
@@ -237,7 +233,7 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public async Task TestAuthenticatedUserCanGetCustomer()
+    public async Task TestAuthenticatedUser_CanGetCustomer()
     {
         await using var factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
@@ -293,7 +289,7 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public async Task TestAuthenticatedUserReturnsNotFoundForGetWhenIdIsInvalid()
+    public async Task TestAuthenticatedUser_ReturnsNotFoundForGet_WhenIdIsInvalid()
     {
         await using var factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
@@ -329,7 +325,7 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public async Task TestUnauthenticatedUserCannotGetCustomer()
+    public async Task TestUnauthenticatedUser_CannotGetCustomer()
     {
         await using var factory = new WebApplicationFactory<Program>();
 
@@ -342,7 +338,7 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public async Task TestUnauthenticatedUserReturnsUnauthorizedForGetWhenIdIsInvalid()
+    public async Task TestUnauthenticatedUser_ReturnsUnauthorizedForGet_WhenIdIsInvalid()
     {
         await using var factory = new WebApplicationFactory<Program>();
 
@@ -358,7 +354,7 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public async Task TestAuthenticatedUserCanCreateCustomer()
+    public async Task TestAuthenticatedUser_CanCreateCustomer()
     {
         //find and save name of unique database
         var databaseName = Guid.NewGuid().ToString();
@@ -438,7 +434,7 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public async Task TestCreateCustomerReturnsBadRequestWhenFirstNameIsMissing()
+    public async Task TestCreateCustomer_ReturnsBadRequest_WhenFirstNameIsMissing()
     {
         //find and save name of unique database
         var databaseName = Guid.NewGuid().ToString();
@@ -493,7 +489,7 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public async Task TestCreateCustomerReturnsBadRequestWhenLastNameIsMissing()
+    public async Task TestCreateCustomer_ReturnsBadRequest_WhenLastNameIsMissing()
     {
         //find and save name of unique database
         var databaseName = Guid.NewGuid().ToString();
@@ -549,7 +545,7 @@ public class AuthorizationTests
 
 
     [Fact]
-    public async Task TestCreateCustomerReturnsBadRequestWhenEmailIsInvalid()
+    public async Task TestCreateCustomer_ReturnsBadRequest_WhenEmailIsInvalid()
     {
         //find and save name of unique database
         var databaseName = Guid.NewGuid().ToString();
@@ -606,7 +602,7 @@ public class AuthorizationTests
 
 
     [Fact]
-    public async Task TestUnauthenticatedUserCannotCreateCustomer()
+    public async Task TestUnauthenticatedUser_CannotCreateCustomer()
     {
         //find and save name of unique database
         var databaseName = Guid.NewGuid().ToString();
@@ -637,7 +633,7 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public async Task TestAuthenticatedUserCanUpdateCustomer()
+    public async Task TestAuthenticatedUser_CanUpdateCustomer()
     {
         //find and save name of unique database
         var databaseName = Guid.NewGuid().ToString();
@@ -721,7 +717,7 @@ public class AuthorizationTests
 
 
     [Fact]
-    public async Task TestUnauthenticatedUserCannotUpdateCustomer()
+    public async Task TestUnauthenticatedUser_CannotUpdateCustomer()
     {
         //find and save name of unique database
         var databaseName = Guid.NewGuid().ToString();
@@ -787,7 +783,7 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public async Task TestAuthenticatedUserCannotUpdateNonexistentCustomer()
+    public async Task TestAuthenticatedUser_CannotUpdateNonexistentCustomer()
     {
         //find and save name of unique database
         var databaseName = Guid.NewGuid().ToString();
@@ -844,7 +840,7 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public async Task TestAuthenticatedUserReturnsBadRequestForUpdateWhenIdIsInvalid()
+    public async Task TestAuthenticatedUser_ReturnsBadRequestForUpdate_WhenIdIsInvalid()
     {
         //find and save name of unique database
         var databaseName = Guid.NewGuid().ToString();
@@ -901,7 +897,7 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public async Task TestAuthenticatedUserReturnsBadRequestForUpdateWhenFirstNameIsMissing()
+    public async Task TestAuthenticatedUser_ReturnsBadRequestForUpdate_WhenFirstNameIsMissing()
     {
         //find and save name of unique database
         var databaseName = Guid.NewGuid().ToString();
@@ -975,7 +971,7 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public async Task TestAuthenticatedUserReturnsBadRequestForUpdateWhenEmailIsInvalid()
+    public async Task TestAuthenticatedUser_ReturnsBadRequestForUpdate_WhenEmailIsInvalid()
     {
         //find and save name of unique database
         var databaseName = Guid.NewGuid().ToString();
@@ -1049,7 +1045,7 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public async Task TestAuthenticatedUserCanDeleteCustomer()
+    public async Task TestAuthenticatedUser_CanDeleteCustomer()
     {
         //find and save name of unique database
         var databaseName = Guid.NewGuid().ToString();
@@ -1129,7 +1125,7 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public async Task TestUnauthenticatedUserCannotDeleteCustomer()
+    public async Task TestUnauthenticatedUser_CannotDeleteCustomer()
     {
         //find and save name of unique database
         var databaseName = Guid.NewGuid().ToString();
@@ -1186,7 +1182,7 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public async Task TestAuthenticatedUserCannotDeleteNonexistentCustomer()
+    public async Task TestAuthenticatedUser_CannotDeleteNonexistentCustomer()
     {
         //find and save name of unique database
         var databaseName = Guid.NewGuid().ToString();
@@ -1235,7 +1231,7 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public async Task TestAuthenticatedUserCannotDeleteCustomerWithInvalidId()
+    public async Task TestAuthenticatedUser_CannotDeleteCustomerWithInvalidId()
     {
         //find and save name of unique database
         var databaseName = Guid.NewGuid().ToString();
