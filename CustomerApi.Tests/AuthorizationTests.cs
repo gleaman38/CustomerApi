@@ -10,12 +10,24 @@ using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text;
 using Xunit;
+using Microsoft.Extensions.Configuration;
 
 
 namespace CustomerApi.Tests;
 
 public class AuthorizationTests
 {
+    private readonly IConfiguration _configuration;
+
+    public AuthorizationTests()
+    {
+        _configuration = new ConfigurationBuilder()
+            .AddJsonFile("testsettings.json")
+            .AddJsonFile("testsettings.local.json", optional: true)
+            .AddEnvironmentVariables()
+            .Build();
+    }
+
     [Fact]
     public async Task TestUserAuthorization()
     {
@@ -43,9 +55,15 @@ public class AuthorizationTests
         new Claim(ClaimTypes.Role, "User")
     };
 
+        var jwtKey = _configuration["Jwt:Key"];
+
+        if (string.IsNullOrEmpty(jwtKey))
+        {
+            throw new InvalidOperationException("JWT test key is missing.");
+        }
+
         var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(
-                "ThisIsADevelopmentOnlySecretKey123456789"));
+            Encoding.UTF8.GetBytes(jwtKey));
 
         var credentials = new SigningCredentials(
             key,
