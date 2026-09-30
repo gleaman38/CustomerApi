@@ -53,7 +53,7 @@ public class AuthorizationTests
         {
         new Claim(ClaimTypes.Name, "testuser"),
         new Claim(ClaimTypes.Role, "User")
-    };
+        };
 
         var jwtKey = _configuration["Jwt:Key"];
 
@@ -83,13 +83,23 @@ public class AuthorizationTests
     {
         var claims = new[]
         {
-        new Claim(ClaimTypes.Name, "testuser"),
-        new Claim(ClaimTypes.Role, "Admin")
-    };
+            new Claim(ClaimTypes.Name, "testuser"),
+            new Claim(ClaimTypes.Role, "Admin")
+        };
+
+        //var key = new SymmetricSecurityKey(
+        //    Encoding.UTF8.GetBytes(
+        //        "ThisIsADevelopmentOnlySecretKey123456789"));
+
+        var jwtKey = _configuration["Jwt:Key"];
+
+        if (string.IsNullOrEmpty(jwtKey))
+        {
+            throw new InvalidOperationException("JWT test key is missing.");
+        }
 
         var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(
-                "ThisIsADevelopmentOnlySecretKey123456789"));
+            Encoding.UTF8.GetBytes(jwtKey));
 
         var credentials = new SigningCredentials(
             key,
@@ -283,7 +293,7 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public async Task TestAuthenticatedUserReturnsNotFoundOnGetWhenIdIsInvalid()
+    public async Task TestAuthenticatedUserReturnsNotFoundForGetWhenIdIsInvalid()
     {
         await using var factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
@@ -319,7 +329,7 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public async Task TestNotAuthenticatedUserCannotGetCustomer()
+    public async Task TestUnauthenticatedUserCannotGetCustomer()
     {
         await using var factory = new WebApplicationFactory<Program>();
 
@@ -332,7 +342,7 @@ public class AuthorizationTests
     }
 
     [Fact]
-    public async Task TestNonAuthenticatedUserReturnsUnauthorizedOnGetWhenIdIsInvalid()
+    public async Task TestUnauthenticatedUserReturnsUnauthorizedForGetWhenIdIsInvalid()
     {
         await using var factory = new WebApplicationFactory<Program>();
 
