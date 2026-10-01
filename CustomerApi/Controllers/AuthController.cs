@@ -25,12 +25,14 @@ namespace CustomerApi.Controllers
             _context = context;
         }
 
-        [HttpPost("login")]
-        public async Task<ActionResult<LoginResponseDto>> Login(LoginRequestDto loginRequest)
+        [HttpPost("loginuser")]
+        public async Task<ActionResult<LoginResponseDto>> LoginUser(LoginRequestDto loginRequest)
         {
+            //find user that matches username in loginRequest sent in
             var user = await _context.Users
                 .FirstOrDefaultAsync(u => u.Username == loginRequest.Username);
 
+            //user attempting log in was not in db
             if (user == null)
             {
                 return Unauthorized();
@@ -43,6 +45,7 @@ namespace CustomerApi.Controllers
                 user.PasswordHash,
                 loginRequest.Password);
 
+            //password in db does not match password sent in
             if (passwordResult == PasswordVerificationResult.Failed)
             {
                 return Unauthorized();
@@ -54,6 +57,7 @@ namespace CustomerApi.Controllers
             new Claim(ClaimTypes.Role, "User")
             };
 
+            //read key from configuration object
             var key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
 
@@ -76,6 +80,66 @@ namespace CustomerApi.Controllers
                 Token = tokenString,
                 Username = loginRequest.Username,
                 Role = "User"
+            };
+
+            return Ok(response);
+        }
+
+        [HttpPost("loginadmin")]
+        public async Task<ActionResult<LoginResponseDto>> LoginAdmin(LoginRequestDto loginRequest)
+        {
+            //find user that matches username in loginRequest sent in
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == loginRequest.Username);
+
+            //user attempting log in was not in db
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            var hasher = new PasswordHasher<User>();
+
+            var passwordResult = hasher.VerifyHashedPassword(
+                user,
+                user.PasswordHash,
+                loginRequest.Password);
+
+            //password in db does not match password sent in
+            if (passwordResult == PasswordVerificationResult.Failed)
+            {
+                return Unauthorized();
+            }
+
+            var claims = new[]
+            {
+            new Claim(ClaimTypes.Name, loginRequest.Username),
+            new Claim(ClaimTypes.Role, "Admin")
+            };
+
+            //read key from configuration object
+            var key = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
+
+            var credentials = new SigningCredentials(
+                key,
+                SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(1),
+                signingCredentials: credentials);
+
+            var tokenString = new JwtSecurityTokenHandler()
+                .WriteToken(token);
+
+            var response = new LoginResponseDto
+            {
+                Token = tokenString,
+                Username = loginRequest.Username,
+                Role = "Admin"
             };
 
             return Ok(response);

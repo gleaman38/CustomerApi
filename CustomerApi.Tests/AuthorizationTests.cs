@@ -20,6 +20,9 @@ public class AuthorizationTests
 
     public AuthorizationTests()
     {
+        /*create new configuration object and add the test key from
+          testsettings.local.json if it exists
+        */
         _configuration = new ConfigurationBuilder()
             .AddJsonFile("testsettings.json")
             .AddJsonFile("testsettings.local.json", optional: true)
@@ -30,13 +33,16 @@ public class AuthorizationTests
     [Fact]
     public async Task TestUserAuthorization()
     {
-        
+        //buid a copy of the web application
         await using var factory = new WebApplicationFactory<Program>();
 
+        //build Http client object
         using var client = factory.CreateClient();
 
+        //build token for user role
         var token = CreateUserTestToken();
 
+        //add token to http header
         client.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue(
                 "Bearer",
@@ -44,6 +50,7 @@ public class AuthorizationTests
 
         var response = await client.GetAsync("/api/Customers");
 
+        //get customers requires admin authentication
         Assert.Equal(403, (int)response.StatusCode);
     }
 
@@ -55,6 +62,7 @@ public class AuthorizationTests
         new Claim(ClaimTypes.Role, "User")
         };
 
+        //read test key from configuration object
         var jwtKey = _configuration["Jwt:Key"];
 
         if (string.IsNullOrEmpty(jwtKey))
@@ -87,6 +95,7 @@ public class AuthorizationTests
             new Claim(ClaimTypes.Role, "Admin")
         };
 
+        //read test key from configuration object
         var jwtKey = _configuration["Jwt:Key"];
 
         if (string.IsNullOrEmpty(jwtKey))
@@ -116,26 +125,33 @@ public class AuthorizationTests
     {
         var databaseName = Guid.NewGuid().ToString();
 
+        //creates a test version of your ASP.NET Core application.
         await using var factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
             {
+                //change how the test version is configured without changing your actual Program.cs
                 builder.ConfigureServices(services =>
                 {
+                    //search for the database configuration belonging to CustomerDbContext in this copy
                     var descriptor = services.SingleOrDefault(
                         d => d.ServiceType == typeof(DbContextOptions<CustomerDbContext>));
 
+                    //Remove the existing database configuration in this copy
                     if (descriptor != null)
                     {
                         services.Remove(descriptor);
                     }
 
+                    //registers CustomerDbContext again, but this time it uses Entity Framework Core's in-memory database 
                     services.AddDbContext<CustomerDbContext>(options =>
                         options.UseInMemoryDatabase(databaseName));
                 });
             });
 
+        //factory.Services gives you access to the test application's dependency injection container
         using var scope = factory.Services.CreateScope();
 
+        //provides access to in memory db registered in that scope
         var db = scope.ServiceProvider.GetRequiredService<CustomerDbContext>();
 
         db.Customers.AddRange(
@@ -158,17 +174,21 @@ public class AuthorizationTests
 
         await db.SaveChangesAsync();
 
+        //build http request
         using var client = factory.CreateClient();
 
         var token = CreateAdminTestToken();
 
+        //add token to request header
         client.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue(
                 "Bearer",
                 token);
 
+
         var response = await client.GetAsync("/api/Customers");
 
+        //get result data returned
         var result = await response.Content
             .ReadFromJsonAsync<IEnumerable<CustomerDto>>();
 

@@ -16,13 +16,15 @@ namespace CustomerApi.Tests
         [Fact]
         public async Task GetCustomer_ReturnsCustomer_WhenCustomerExists()
         {
-            //Arrange
+            //set up options for in memory database for testing
             var options = new DbContextOptionsBuilder<CustomerDbContext>()
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()) 
                 .Options;
 
+            //context now points to in memory db
             using var context = new CustomerDbContext(options);
 
+            //add to in memory db
             context.Customers.Add(new Models.Customer
             {
                 Id = 1,
@@ -40,14 +42,16 @@ namespace CustomerApi.Tests
 
             var controller = new CustomersController(service);
 
-            //Act
+            //Find customer with id 1
             var result = await controller.GetCustomer(1);
 
-            //Assert
+            //did I get an OK back
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
 
+            //did I get result data back
             var customer = Assert.IsType<CustomerDto>(okResult.Value);
 
+            //Does result match what I expected
             Assert.Equal("John", customer.FirstName);
             Assert.Equal("Smith", customer.LastName);
         }
