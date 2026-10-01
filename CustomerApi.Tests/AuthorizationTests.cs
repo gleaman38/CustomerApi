@@ -9,7 +9,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text;
-using Xunit;
 using Microsoft.Extensions.Configuration;
 
 
@@ -31,6 +30,7 @@ public class AuthorizationTests
     [Fact]
     public async Task TestUserAuthorization()
     {
+        
         await using var factory = new WebApplicationFactory<Program>();
 
         using var client = factory.CreateClient();

@@ -1,14 +1,7 @@
-﻿using CustomerApi.Data;
-using CustomerApi.DTOs;
-using CustomerApi.Models;
+﻿using CustomerApi.DTOs;
 using CustomerApi.Services;
-using CustomerApi.Repositories;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Collections;
-using System.Reflection.Metadata;
 
 namespace CustomerApi.Controllers;
 
