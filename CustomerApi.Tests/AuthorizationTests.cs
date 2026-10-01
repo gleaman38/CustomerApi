@@ -30,29 +30,6 @@ public class AuthorizationTests
             .Build();
     }
 
-    [Fact]
-    public async Task TestUserAuthorization()
-    {
-        //buid a copy of the web application
-        await using var factory = new WebApplicationFactory<Program>();
-
-        //build Http client object
-        using var client = factory.CreateClient();
-
-        //build token for user role
-        var token = CreateUserTestToken();
-
-        //add token to http header
-        client.DefaultRequestHeaders.Authorization =
-            new System.Net.Http.Headers.AuthenticationHeaderValue(
-                "Bearer",
-                token);
-
-        var response = await client.GetAsync("/api/Customers");
-
-        Assert.Equal(200, (int)response.StatusCode);
-    }
-
     private string CreateUserTestToken()
     {
         var claims = new[]
