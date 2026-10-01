@@ -16,8 +16,11 @@ public class CustomersController : ControllerBase
         _service = service;
     }
 
+    /*authorize roles are for demonstration purposes only
+     * roles will work differently in real world
+    */ 
+
     [HttpGet]
-    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<IEnumerable<CustomerDto>>> GetCustomers()
     {
         var customers = await _service.GetAllAsync();
@@ -46,6 +49,7 @@ public class CustomersController : ControllerBase
 
     
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<CustomerDto>> CreateCustomer(CreateCustomerDto customerDto)
     {
         var createdCustomerDto = await _service.AddAsync(customerDto);
@@ -57,6 +61,7 @@ public class CustomersController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<CustomerDto>> EditCustomer(int id, UpdateCustomerDto customerDto)
     {
 
@@ -76,6 +81,7 @@ public class CustomersController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<CustomerDto>> DeleteCustomer(int id)
     {
 
