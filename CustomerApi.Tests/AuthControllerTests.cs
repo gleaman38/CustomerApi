@@ -182,6 +182,62 @@ public class AuthControllerTests
     }
 
     [Fact]
+    public async Task LoginAdmin_ReturnsForbidden_WhenNonAdminUserLogsIn()
+    {
+        //simulate db
+        var options = new DbContextOptionsBuilder<CustomerDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+
+        using var context = new CustomerDbContext(options);
+
+        var user = new User
+        {
+            Username = "testuser",
+            Role = "User"
+        };
+
+        var hasher = new PasswordHasher<User>();
+
+        user.PasswordHash = hasher.HashPassword(
+            user,
+            "TestPassword123!");
+
+        //add record for good user, role and password to simulated db
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        //simulate token creation to run controller method
+        var settings = new Dictionary<string, string?>
+        {
+            ["Jwt:Key"] = "ThisIsATestSecretKeyForUnitTesting123456",
+            ["Jwt:Issuer"] = "CustomerApi",
+            ["Jwt:Audience"] = "CustomerApiUsers"
+        };
+
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(settings)
+            .Build();
+
+        //simulate controller
+        var controller = new AuthController(configuration, context);
+
+        //simulate user login request
+        var loginRequest = new LoginRequestDto
+        {
+            Username = "testuser",
+            Password = "TestPassword123!"
+        };
+
+        //testing Login method with bad password
+        var result = await controller.LoginAdmin(loginRequest);
+
+        // Verify unauthorized response
+        Assert.IsType<Microsoft.AspNetCore.Mvc.ForbidResult>(
+            result.Result);
+    }
+
+    [Fact]
     public async Task LoginAdmin_ReturnsUnauthorized_WhenInvalidPassword()
     {
         //simulate db
@@ -237,7 +293,6 @@ public class AuthControllerTests
             result.Result);
 
     }
-
 
     [Fact]
     public async Task LoginUser_ReturnsUnauthorized_WhenUserDoesNotExist()
@@ -318,6 +373,62 @@ public class AuthControllerTests
 
         // Verify unauthorized response
         Assert.IsType<Microsoft.AspNetCore.Mvc.UnauthorizedResult>(
+            result.Result);
+    }
+
+    [Fact]
+    public async Task LoginAdmin_ReturnsOk_WhenAdminUserLogsIn()
+    {
+        //simulate db
+        var options = new DbContextOptionsBuilder<CustomerDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+
+        using var context = new CustomerDbContext(options);
+
+        var user = new User
+        {
+            Username = "testadmin",
+            Role = "Admin"
+        };
+
+        var hasher = new PasswordHasher<User>();
+
+        user.PasswordHash = hasher.HashPassword(
+            user,
+            "TestPassword456!");
+
+        //add record for good user, role and password to simulated db
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        //simulate token creation to run controller method
+        var settings = new Dictionary<string, string?>
+        {
+            ["Jwt:Key"] = "ThisIsATestSecretKeyForUnitTesting123456",
+            ["Jwt:Issuer"] = "CustomerApi",
+            ["Jwt:Audience"] = "CustomerApiUsers"
+        };
+
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(settings)
+            .Build();
+
+        //simulate controller
+        var controller = new AuthController(configuration, context);
+
+        //simulate login request with bad password
+        var loginRequest = new LoginRequestDto
+        {
+            Username = "testadmin",
+            Password = "TestPassword456!"
+        };
+
+        //testing Login method with bad password
+        var result = await controller.LoginAdmin(loginRequest);
+
+        // Verify unauthorized response
+        Assert.IsType<Microsoft.AspNetCore.Mvc.OkObjectResult>(
             result.Result);
     }
 

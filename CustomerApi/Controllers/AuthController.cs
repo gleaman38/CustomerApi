@@ -111,10 +111,22 @@ namespace CustomerApi.Controllers
                 return Unauthorized();
             }
 
+            /* Verify the user's actual role is admin before 
+               granting admin access. Since user is authenticated, but does
+               not have admin role return 403 Forbidden
+            */
+            if (!string.Equals(user.Role, "Admin",
+                StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
+
+            //send in the actual role of the user read from db 
+            //not a hard coded Admin role
             var claims = new[]
             {
-            new Claim(ClaimTypes.Name, loginRequest.Username),
-            new Claim(ClaimTypes.Role, "Admin")
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Role, user.Role)
             };
 
             //read key from configuration object
