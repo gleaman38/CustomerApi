@@ -39,3 +39,22 @@ jobs:
       with:
         name: CustomerApi-publish
         path: ./publish
+        
+deploy:
+  needs: build-and-test
+  runs-on: ubuntu-latest
+  
+  steps:
+    - name: Download published application
+      uses: actions/download-artifact@v4
+      with:
+        name: CustomerApi-publish
+        path: ./deployment
+    - name: Simulate deployment
+      run: |
+        echo "Deploying CustomerApi..."
+        ls -la ./deployment
+        echo "Deployment completed successfully."
+  
+  
+        
